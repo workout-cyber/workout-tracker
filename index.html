@@ -13,23 +13,25 @@
 
     <div class="header">
         <h1>Workout Tracker</h1>
-        <button id="darkToggle" class="toggle-btn">🌙</button>
+        <button id="darkToggle" class="toggle-btn" aria-label="Toggle dark mode">🌙</button>
     </div>
 
-    <div class="input-box">
-        <input id="exercise" placeholder="Exercise name">
-        <input id="reps" type="number" placeholder="Reps">
-        <input id="weight" type="number" placeholder="Weight (lbs)">
-        <button class="add-btn" onclick="addWorkout()">Add</button>
-    </div>
+    <form class="input-box" onsubmit="event.preventDefault(); addWorkout();">
+        <input id="exercise" type="text" placeholder="Exercise name" required>
+        <input id="reps" type="number" placeholder="Reps" min="1" required>
+        <input id="weight" type="number" placeholder="Weight (lbs)" min="0" step="any" required>
+        <button type="submit" class="add-btn">Add</button>
+    </form>
 
     <div class="favorites">
         <h3>Quick Add</h3>
         <div id="favBar"></div>
     </div>
 
-    <h3>Total Volume: <span id="totalVolume">0</span> lbs</h3>
-    <p id="comparisonText" class="subtext"></p>
+    <div class="stats-section">
+        <h3>Total Volume: <span id="totalVolume">0</span> lbs</h3>
+        <p id="comparisonText" class="subtext"></p>
+    </div>
 
     <h3>Personal Records</h3>
     <ul id="prList"></ul>
@@ -38,10 +40,14 @@
     <ul id="log"></ul>
 
     <h3>Weekly Volume</h3>
-    <canvas id="chartVolume"></canvas>
+    <div class="chart-container">
+        <canvas id="chartVolume"></canvas>
+    </div>
 
     <h3>PR History</h3>
-    <canvas id="chartPR"></canvas>
+    <div class="chart-container">
+        <canvas id="chartPR"></canvas>
+    </div>
 
     <h3>Calendar View</h3>
     <div id="calendar"></div>
@@ -51,4 +57,3 @@
 <script src="script.js"></script>
 </body>
 </html>
-

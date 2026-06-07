@@ -1,43 +1,58 @@
 :root {
     --bg: #f5f7fa;
     --card: #ffffff;
-    --text: #222;
+    --text: #222222;
     --border: #e5e7eb;
     --accent: #007aff;
+    --accent-hover: #0056b3;
     --subtext: #6b7280;
+    --fav-bg: #e1effe;
+    --fav-text: #007aff;
 }
 
 body.dark {
-    --bg: #111;
+    --bg: #111111;
     --card: #1c1c1e;
     --text: #f5f5f5;
-    --border: #333;
+    --border: #333333;
     --subtext: #9ca3af;
+    --fav-bg: #1e293b;
+    --fav-text: #38bdf8;
 }
 
 body {
     background: var(--bg);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     margin: 0;
-    padding: 40px;
+    padding: 40px 20px; /* Reduced side padding to prevent mobile squeezing */
     display: flex;
     justify-content: center;
-    transition: background 0.3s;
+    transition: background 0.3s, color 0.3s;
 }
 
 .container {
-    width: 420px;
+    width: 100%;
+    max-width: 420px; /* Fluid width for smaller mobile screens */
     background: var(--card);
     padding: 25px;
     border-radius: 16px;
     box-shadow: 0 8px 30px rgba(0,0,0,0.08);
     transition: background 0.3s;
+    box-sizing: border-box;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 10px;
+}
+
+/* Ensure headings scale nicely */
+h1, h2, h3 {
+    color: var(--text);
+    margin-top: 20px;
+    margin-bottom: 10px;
 }
 
 .toggle-btn {
@@ -45,6 +60,12 @@ body {
     border: none;
     font-size: 22px;
     cursor: pointer;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.toggle-btn:focus-visible {
+    outline: 2px solid var(--accent);
 }
 
 .input-box {
@@ -61,6 +82,13 @@ input {
     font-size: 15px;
     background: var(--card);
     color: var(--text);
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--accent);
 }
 
 .add-btn {
@@ -70,12 +98,17 @@ input {
     border: none;
     border-radius: 10px;
     font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
-    transition: 0.2s;
+    transition: background 0.2s;
 }
 
 .add-btn:hover {
-    opacity: 0.85;
+    background: var(--accent-hover);
+}
+
+.add-btn:focus-visible {
+    outline: 3px solid var(--border);
 }
 
 .subtext {
@@ -108,25 +141,19 @@ input {
     font-size: 14px;
 }
 
+/* Badges for PR levels */
 .badge {
     font-size: 11px;
-    padding: 2px 6px;
+    font-weight: 600;
+    padding: 2px 8px;
     border-radius: 999px;
     margin-left: 6px;
-    color: white;
+    color: #white;
 }
 
-.badge-gold {
-    background: #fbbf24;
-}
-
-.badge-silver {
-    background: #9ca3af;
-}
-
-.badge-bronze {
-    background: #f97316;
-}
+.badge-gold { background: #d97706; color: #fff; }
+.badge-silver { background: #71717a; color: #fff; }
+.badge-bronze { background: #c2410c; color: #fff; }
 
 .new-pr {
     animation: pulse 0.6s ease;
@@ -139,7 +166,7 @@ input {
 
 @keyframes pulse {
     0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+    50% { transform: scale(1.03); }
     100% { transform: scale(1); }
 }
 
@@ -147,13 +174,15 @@ input {
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 0;
+    padding: 4px;
     margin-left: 8px;
+    display: flex;
+    align-items: center;
 }
 
 .delete-btn svg {
     stroke: #ff3b30;
-    transition: 0.2s;
+    transition: transform 0.2s;
 }
 
 .delete-btn:hover svg {
@@ -164,16 +193,23 @@ input {
     margin-bottom: 16px;
 }
 
+/* Improved visual distinction for Quick Add items */
 #favBar button {
-    background: var(--accent);
-    color: white;
+    background: var(--fav-bg);
+    color: var(--fav-text);
     border: none;
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 8px;
     margin-right: 6px;
     margin-bottom: 6px;
     cursor: pointer;
     font-size: 13px;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+#favBar button:hover {
+    opacity: 0.85;
 }
 
 #prList {
@@ -195,10 +231,17 @@ input {
     align-items: center;
 }
 
+/* Ensure responsive wrapper for Chart.js */
+.chart-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
 #calendar {
     border-radius: 10px;
     border: 1px solid var(--border);
-    padding: 10px;
+    padding: 12px;
     max-height: 220px;
     overflow-y: auto;
     font-size: 13px;
@@ -206,15 +249,26 @@ input {
 }
 
 .calendar-day {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .calendar-day-title {
     font-weight: 600;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
 }
 
 .calendar-entry {
     padding-left: 10px;
+    color: var(--subtext);
 }
 
+/* Mobile Media Query */
+@media (max-width: 480px) {
+    body {
+        padding: 15px 10px;
+    }
+    .container {
+        padding: 15px;
+        border-radius: 12px;
+    }
+}

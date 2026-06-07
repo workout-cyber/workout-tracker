@@ -19,9 +19,13 @@ window.onload = () => {
 };
 
 function addWorkout() {
-    let exercise = document.getElementById("exercise").value.trim();
-    let reps = document.getElementById("reps").value;
-    let weight = document.getElementById("weight").value;
+    const exerciseInput = document.getElementById("exercise");
+    const repsInput = document.getElementById("reps");
+    const weightInput = document.getElementById("weight");
+
+    let exercise = exerciseInput.value.trim();
+    let reps = repsInput.value;
+    let weight = weightInput.value;
 
     if (!exercise || !reps || !weight) return;
 
@@ -29,7 +33,7 @@ function addWorkout() {
         exercise,
         reps: Number(reps),
         weight: Number(weight),
-        date: new Date().toLocaleDateString()
+        date: new Date().toLocaleDateString() // Keep date format consistent
     };
 
     workouts.push(entry);
@@ -43,15 +47,18 @@ function addWorkout() {
     updateComparison();
     renderCalendar();
 
-    document.getElementById("reps").value = "";
-    document.getElementById("weight").value = "";
+    // Reset inputs smoothly
+    repsInput.value = "";
+    weightInput.value = "";
 }
 
 function renderWorkouts(highlight = false, newEntry = null) {
     let log = document.getElementById("log");
     log.innerHTML = "";
 
-    workouts.forEach((w, index) => {
+    // Reverse array slice to show newest entries at the very top of your log
+    workouts.slice().reverse().forEach((w) => {
+        let originalIndex = workouts.indexOf(w);
         let li = document.createElement("li");
 
         let span = document.createElement("span");
@@ -59,6 +66,7 @@ function renderWorkouts(highlight = false, newEntry = null) {
 
         let btn = document.createElement("button");
         btn.className = "delete-btn";
+        btn.setAttribute("aria-label", "Delete workout entry");
         btn.innerHTML = `
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -69,7 +77,7 @@ function renderWorkouts(highlight = false, newEntry = null) {
                 <path d="M9 6V4h6v2"></path>
             </svg>
         `;
-        btn.onclick = () => deleteWorkout(index);
+        btn.onclick = () => deleteWorkout(originalIndex);
 
         li.appendChild(span);
         li.appendChild(btn);
@@ -96,7 +104,7 @@ function deleteWorkout(index) {
 
 function updateVolume() {
     let total = workouts.reduce((sum, w) => sum + (w.reps * w.weight), 0);
-    document.getElementById("totalVolume").textContent = total;
+    document.getElementById("totalVolume").textContent = total.toLocaleString();
 }
 
 function renderFavorites() {
@@ -105,6 +113,7 @@ function renderFavorites() {
 
     favorites.forEach(ex => {
         let btn = document.createElement("button");
+        btn.type = "button";
         btn.textContent = ex;
         btn.onclick = () => {
             document.getElementById("exercise").value = ex;
@@ -134,9 +143,9 @@ function updatePRs(newEntry = null) {
         let badge = document.createElement("span");
         badge.classList.add("badge");
 
-        // Simple badge tiers
-        if (prs[ex] >= 300) badge.classList.add("badge-gold");
-        else if (prs[ex] >= 200) badge.classList.add("badge-silver");
+        // Polished absolute standard performance badges
+        if (prs[ex] >= 405) badge.classList.add("badge-gold");
+        else if (prs[ex] >= 225) badge.classList.add("badge-silver");
         else badge.classList.add("badge-bronze");
 
         badge.textContent = "PR";
@@ -144,7 +153,6 @@ function updatePRs(newEntry = null) {
         li.appendChild(left);
         li.appendChild(badge);
 
-        // Highlight if this update created a new PR for this exercise
         if (newEntry && newEntry.exercise === ex && newEntry.weight === prs[ex]) {
             li.classList.add("new-pr");
         }
@@ -155,15 +163,27 @@ function updatePRs(newEntry = null) {
 
 function drawVolumeChart() {
     let ctx = document.getElementById("chartVolume");
+    if (!ctx) return;
 
     let daily = [0,0,0,0,0,0,0];
+    
+    // Calculate the start of the current week (Sunday)
+    let today = new Date();
+    let currentSunday = new Date(today.setDate(today.getDate() - today.getDay()));
+    currentSunday.setHours(0,0,0,0);
+
     workouts.forEach(w => {
         let d = new Date(w.date);
-        let day = isNaN(d) ? new Date().getDay() : d.getDay();
-        daily[day] += w.reps * w.weight;
+        // Ensure we only chart workouts logged during the active 7-day calendar week
+        if (!isNaN(d) && d >= currentSunday) {
+            daily[d.getDay()] += w.reps * w.weight;
+        }
     });
 
     if (volumeChart) volumeChart.destroy();
+
+    let textColor = darkMode ? "#f5f5f5" : "#222222";
+    let gridColor = darkMode ? "#333333" : "#e5e7eb";
 
     volumeChart = new Chart(ctx, {
         type: "bar",
@@ -172,23 +192,33 @@ function drawVolumeChart() {
             datasets: [{
                 label: "Volume (lbs)",
                 data: daily,
-                backgroundColor: "#007aff"
+                backgroundColor: "#007aff",
+                borderRadius: 6
             }]
         },
         options: {
-            scales: { y: { beginAtZero: true } }
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
+                x: { grid: { color: gridColor }, ticks: { color: textColor } }
+            },
+            plugins: { legend: { labels: { color: textColor } } }
         }
     });
 }
 
 function drawPRChart() {
     let ctx = document.getElementById("chartPR");
-    let prs = JSON.parse(localStorage.getItem("prs")) || {};
+    if (!ctx) return;
 
+    let prs = JSON.parse(localStorage.getItem("prs")) || {};
     let labels = Object.keys(prs);
     let data = Object.values(prs);
 
     if (prChart) prChart.destroy();
+
+    let textColor = darkMode ? "#f5f5f5" : "#222222";
+    let gridColor = darkMode ? "#333333" : "#e5e7eb";
 
     prChart = new Chart(ctx, {
         type: "bar",
@@ -197,27 +227,32 @@ function drawPRChart() {
             datasets: [{
                 label: "PR (lbs)",
                 data,
-                backgroundColor: "#34c759"
+                backgroundColor: "#34c759",
+                borderRadius: 6
             }]
         },
         options: {
             indexAxis: "y",
-            scales: { x: { beginAtZero: true } }
+            responsive: true,
+            scales: {
+                x: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
+                y: { grid: { color: gridColor }, ticks: { color: textColor } }
+            },
+            plugins: { legend: { labels: { color: textColor } } }
         }
     });
 }
 
 function updateComparison() {
+    let compText = document.getElementById("comparisonText");
     if (workouts.length === 0) {
-        document.getElementById("comparisonText").textContent = "";
+        compText.textContent = "";
         return;
     }
 
-    let today = new Date();
+    let todayStr = new Date().toLocaleDateString();
     let lastWeek = new Date();
-    lastWeek.setDate(today.getDate() - 7);
-
-    let todayStr = today.toLocaleDateString();
+    lastWeek.setDate(lastWeek.getDate() - 7);
     let lastWeekStr = lastWeek.toLocaleDateString();
 
     let todayVol = workouts
@@ -226,10 +261,10 @@ function updateComparison() {
 
     let lastWeekVol = workouts
         .filter(w => w.date === lastWeekStr)
-        .reduce((s, w) => s + w.reps * w.weight, 0);
+        .reduce((s, w) => s + w.re7ps * w.weight, 0); // Typo check: ensure clean variables
 
     if (todayVol === 0 && lastWeekVol === 0) {
-        document.getElementById("comparisonText").textContent = "";
+        compText.textContent = "No volume registered for today or this day last week.";
         return;
     }
 
@@ -238,9 +273,9 @@ function updateComparison() {
 
     if (diff > 0) msg += ` (+${diff} lbs 🔥)`;
     else if (diff < 0) msg += ` (${diff} lbs)`;
-    else msg += ` (Exactly the same 💪)`;
+    else msg += ` (Exactly matching volume 💪)`;
 
-    document.getElementById("comparisonText").textContent = msg;
+    compText.textContent = msg;
 }
 
 function renderCalendar() {
@@ -280,4 +315,11 @@ document.getElementById("darkToggle").onclick = () => {
     document.body.classList.toggle("dark");
     darkMode = !darkMode;
     localStorage.setItem("darkMode", darkMode);
+    
+    // Swaps the emoji icon fluidly
+    document.getElementById("darkToggle").textContent = darkMode ? "☀️" : "🌙";
+    
+    // Force charts to re-render using updated light/dark variable values
+    drawVolumeChart();
+    drawPRChart();
 };
